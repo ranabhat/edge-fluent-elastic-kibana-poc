@@ -1,0 +1,66 @@
+# docker-compose.yml
+version: '3'
+
+services:
+  fluent-bit:
+    image: fluent/fluent-bit:3.0.2-arm64
+    container_name: fluent-bit
+    volumes:
+      - ./fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
+#      - ./parsers.conf:/fluent-bit/etc/parsers.conf
+    ports:
+      - "24224:24224"
+    # depends_on:
+    #   es01:
+    #     condition: service_healthy
+    #   kibana:
+    #     condition: service_healthy
+
+    networks:
+      - log-redirect
+
+  exampled:
+    build: ./example-app
+    container_name: exampled
+    volumes:
+      - ./:/app
+
+    depends_on:
+      - fluent-bit
+    # logging:
+    #   driver: fluentd
+    #   options:
+    #     tag: my_log
+
+    networks:
+      - log-redirect
+
+networks:
+  log-redirect:
+    name: log-redirect
+    driver: bridge
+    external: true
+
+
+  # elasticsearch:
+  #   image: docker.elastic.co/elasticsearch/elasticsearch:8.13.0
+  #   container_name: elasticsearch
+  #   environment:
+  #     - "discovery.type=single-node"
+  #   expose:
+  #     - "9200"
+  #     - "9300"
+  #   ports:
+  #     - "9200:9200"
+  #     - "9300:9300"
+
+
+  # kibana:
+  #   image: docker.elastic.co/kibana/kibana:8.13.0
+  #   container_name: kibana
+  #   links:
+  #     - "elasticsearch"
+  #   ports:
+  #     - "5601:5601"
+
+
